@@ -1,0 +1,9 @@
+{
+  "name": "WalletUnitpayPS",
+  "description": "Unitpay payment module for Nwicode",
+  "type": "module",
+  "version": "1.0.5",
+  "updatepath": "",
+  "dependencies": {
+  }
+}

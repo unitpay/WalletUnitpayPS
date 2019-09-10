@@ -1,0 +1,494 @@
+<?php
+
+//Получим данные кошелька
+//$application = $this->getApplication();
+if ($this->getSession()->getAppId()) {
+    $app_id = $this->getSession()->getAppId();
+} else {
+    $app_id = $this->getApplication()->getId();
+}
+$db = Zend_Db_Table_Abstract::getDefaultAdapter();
+
+$application = (new Application_Model_Application())->find($app_id);
+
+$stmt = $db->query(
+    'SELECT version FROM module WHERE name = ?',
+    ['Wallet']
+);
+$current_version = $stmt->fetch()['version'];
+
+
+if (empty($current_version)) {
+    echo "Wallet module not found! Exit...";
+    ?><br><a
+            href="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"; ?>"
+            rel="" class="navigation"><i class="fa fa-sign-out fa-lg"></i> <?php echo __('Exit to Editor'); ?></a>
+    <br><?php
+    die(__("Wallet module not found! Exit..."));
+}
+
+$stmt = $db->query(
+    'SELECT * FROM application_option WHERE code = ?',
+    ['wallet']
+);
+$option_id = $stmt->fetch()['option_id'];
+$stmt = $db->query(
+    'SELECT * FROM application_option_value WHERE option_id = ? and app_id = ?',
+    [$option_id, $app_id]
+);
+$value_id = $stmt->fetch()['value_id'];
+
+$wallet = new Wallet_Model_Wallet();
+$wallet->find(["value_id" => $value_id]);
+
+$unitpay = new WalletUnitpayPS_Model_PaymentMethodsUnitpay();
+$unitpay->find(['wallet_id' => $wallet->getId()]);
+?>
+
+<div id="list-panel" class="settings-panel">
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Unitpay. <?php echo __('Settings'); ?></h1>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-sm-8">
+            <p>Модуль позволяет пополнять внтуренний баланс пользователей в модуле "Кошелек" через сервис <a
+                        href="https://unitpay.ru?utm_source=nwicode_com&utm_medium=link&utm_campaign=partner_nwicode"
+                        target=_"blank">Unitpay</a>. Сервис работает с QIWI, Yandex.Money, Visa, Paypal и другими
+                системами.</p>
+            <p>Для работы данного модуля, вам необходимо зарегистрироваться в <a
+                        href="https://unitpay.ru?utm_source=nwicode_com&utm_medium=link&utm_campaign=partner_nwicode"
+                        target=_"blank">Unitpay</a> и заполнить данные для подключения.</p>
+        </div>
+        <div class="col-sm-4">
+            <a href="https://unitpay.ru?utm_source=nwicode_com&utm_medium=link&utm_campaign=partner_nwicode"
+               class="btn btn-lg btn-success" target="_blank">Перейти в Unitpay</a>
+        </div>
+    </div>
+    <br>
+    <form class="form-horizontal" id="unitpaysettingsForm" method="post"
+          action="<?php echo $this->getUrl('walletunitpayps/admin/save'); ?>">
+        <input type="hidden" name="wallet_id" value="<?php echo $wallet->getId(); ?>">
+        <input type="hidden" name="unitpay_id" value="<?php echo $unitpay->getId(); ?>">
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div class="form-group">
+                    <label for="inputTitle" class="col-sm-2 control-label"><?php echo __('Enabled'); ?>?</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="enabled">
+                            <option value=1 <?php if ($unitpay->getData('enabled') == "1") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('Method enabled'); ?></option>
+                            <option value=0 <?php if ($unitpay->getData('enabled') == "0") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('Method disabled'); ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputTitle" class="col-sm-2 control-label"><?php echo __('Method title'); ?></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="inputTitle" name="title"
+                               placeholder="via Unitpay, Unitpay online , etc..."
+                               value="<?php echo $unitpay->getData('title'); ?>">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputPassword" class="col-sm-2 control-label">Project ID</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="project_id" id="inputPassword"
+                               placeholder="Project ID" value="<?php echo $unitpay->getData('project_id'); ?>">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputPassword" class="col-sm-2 control-label">Public Key</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="public_key" id="inputPassword"
+                               placeholder="Public Key" value="<?php echo $unitpay->getData('public_key'); ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputPassword" class="col-sm-2 control-label">Secret Key</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="secret_key" id="inputPassword"
+                               placeholder="Secret Key" value="<?php echo $unitpay->getData('secret_key'); ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputTitle" class="col-sm-2 control-label">Language</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="locale">
+                            <option value="ru" <?php if ($unitpay->getData('locale') == "ru") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('Russian'); ?></option>
+                            <option value="en" <?php if ($unitpay->getData('locale') == "en") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('English'); ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputTitle" class="col-sm-2 control-label">Currency</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="currency">
+                            <option value="USD" <?php if ($unitpay->getData('currency') == "USD") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('USD'); ?></option>
+                            <option value="RUB" <?php if ($unitpay->getData('currency') == "RUB") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('RUB'); ?></option>
+                            <option value="EUR" <?php if ($unitpay->getData('currency') == "EUR") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('EUR'); ?></option>
+                            <option value="UAH" <?php if ($unitpay->getData('currency') == "UAH") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('UAH'); ?></option>
+                            <option value="BYR" <?php if ($unitpay->getData('currency') == "BYR") {
+                                echo "selected='selected'";
+                            } ?>><?php echo __('BYR'); ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Notification URL</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="notification_url" placeholder="Notification URL"
+                               value="<?php echo $application->getDomain() ? $application->getDomain() : $application->getUrl() ?>walletunitpayps/mobile_unitpay/notify"
+                               readonly read-only>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <h2><?php echo __('Payments method'); ?></h2>
+                <table class="table table-bordered table-condensed">
+                    <thead>
+                    <tr>
+                        <th><?php echo __('Enabled'); ?></th>
+                        <th>Код</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="mc_enabled">
+                                <option value="1" <?php if ($unitpay->getData('mc_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('mc_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Мобильный платеж</td>
+                        <td><input type="text" class="form-control" name="mc_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('mc_title'); ?>"></td>
+                        <td>Оплата услуг посредством API/WEB формы. Плюсы: отчисления до 95% от платежа, отсутствие
+                            фрода, прозрачный процесс оплаты. Минусы: доступна только Россия и операторы МТС, Мегафон,
+                            Билайн и Теле2
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="sms_enabled">
+                                <option value="1" <?php if ($unitpay->getData('sms_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('sms_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>SMS-оплата</td>
+                        <td><input type="text" class="form-control" name="sms_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('sms_title'); ?>"></td>
+                        <td> Оплата услуг&nbsp;посредством отправки SMS-сообщения на платный короткий номер. Плюсы:
+                            доступны все страны для оплаты. Минусы: отчисления порядка 50% от платежа, ошибки при наборе
+                            SMS сообщений
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="card_enabled">
+                                <option value="1" <?php if ($unitpay->getData('card_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('card_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Пластиковые карты</td>
+                        <td><input type="text" class="form-control" name="card_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('card_title'); ?>"></td>
+                        <td> Прием платежей с карт всего мира</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="webmoney_enabled">
+                                <option value="1" <?php if ($unitpay->getData('webmoney_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('webmoney_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>WebMoney</td>
+                        <td><input type="text" class="form-control" name="webmoney_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('webmoney_title'); ?>"></td>
+                        <td> Наиболее популярная электронная платежная система. Для активации оплаты вы должны обладать
+                            аттестатом не ниже персонального
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="yandex_enabled">
+                                <option value="1" <?php if ($unitpay->getData('yandex_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('yandex_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Яндекс.Деньги</td>
+                        <td><input type="text" class="form-control" name="yandex_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('yandex_title'); ?>"></td>
+                        <td> Доступный и безопасный способ платить за товары и услуги через интернет</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="qiwi_enabled">
+                                <option value="1" <?php if ($unitpay->getData('qiwi_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('qiwi_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Qiwi</td>
+                        <td><input type="text" class="form-control" name="qiwi_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('qiwi_title'); ?>"></td>
+                        <td> Электронная платежная система, а также огромная сеть терминалов оплаты</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="paypal_enabled">
+                                <option value="1" <?php if ($unitpay->getData('paypal_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('paypal_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>PayPal</td>
+                        <td><input type="text" class="form-control" name="paypal_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('paypal_title'); ?>"></td>
+                        <td> Крупнейший оператор электронных денежных средств во всем мире</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="liqpay_enabled">
+                                <option value="1" <?php if ($unitpay->getData('liqpay_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('liqpay_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>LiqPay</td>
+                        <td><input type="text" class="form-control" name="liqpay_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('liqpay_title'); ?>"></td>
+                        <td> Популярная украинская платежная система</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="alfaclick_enabled">
+                                <option value="1" <?php if ($unitpay->getData('alfaclick_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('alfaclick_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Альфа-Клик</td>
+                        <td><input type="text" class="form-control" name="alfaclick_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('alfaclick_title'); ?>"></td>
+                        <td> Наиболее популярный и удобный интернет-банк</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="cash_enabled">
+                                <option value="1" <?php if ($unitpay->getData('cash_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('cash_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Наличные</td>
+                        <td><input type="text" class="form-control" name="cash_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('cash_title'); ?>"></td>
+                        <td> Оплата наличными в любом отделении "Евросеть" или салонах связи "Связной"</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select class="form-control" name="applepay_enabled">
+                                <option value="1" <?php if ($unitpay->getData('applepay_enabled') == "1") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('Yes'); ?></option>
+                                <option value="0" <?php if ($unitpay->getData('applepay_enabled') == "0") {
+                                    echo "selected='selected'";
+                                } ?>><?php echo __('No'); ?></option>
+                            </select>
+                        </td>
+                        <td>Apple Pay</td>
+                        <td><input type="text" class="form-control" name="applepay_title" placeholder="Название"
+                                   value="<?php echo $unitpay->getData('applepay_title'); ?>"></td>
+                        <td> Прием платежей с карт с помощью Apple Pay</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+        <div class="row" style="padding:10px;">
+            <div class="col-sm-6 text-right">
+                <button type="button" class="btn btn-success btn-lg unitpay_save_settings" id="unitpay_save_settings"><i
+                            class="fa fa-floppy-o" aria-hidden="true"></i> <?php echo $this->_('Save'); ?></button>
+            </div>
+            <div class="col-sm-6 text-left">
+                <button type="button" class="btn btn-default btn-lg unitpay_back_button" id="unitpay_back_button"><i
+                            class="fa fa-undo" aria-hidden="true"></i> <?php echo $this->_('Undo'); ?></button>
+            </div>
+        </div>
+    </form>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">Настройка модуля</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6"><img src="/app/local/modules/WalletUnitpayPS/assets/info1.png"
+                                                   class="img-thumbnail"></div>
+                        <div class="col-sm-6">Где находится идентификатор проекта (Project ID)</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6"><img src="/app/local/modules/WalletUnitpayPS/assets/info2.png"
+                                                   class="img-thumbnail"></div>
+                        <div class="col-sm-6">Где находится Public Key и Secret Key</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6"><img src="/app/local/modules/WalletUnitpayPS/assets/info3.png"
+                                                   class="img-thumbnail"></div>
+                        <div class="col-sm-6">Куда необходимо добавить ваш обратный адрес для уведомлений (Notification
+                            URL). Внимание, это важно! Если его не указать, то от Unitpay не будут приходить уведомления
+                            о платежах и средства в кошелек добавляться не будут.!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var form_valid = false;
+    $(document).ready(function () {
+        $("#unitpay_back_button").on("click", function () {
+            loader_show();
+            $.ajax({
+                url: '<?php echo $this->getUrl('wallet/admin/payment'); ?>',
+                type: 'GET',
+                data: "parameter=WalletUnitpayPS",
+                dataType: "json",
+                success: function (data) {
+                    $("#error-message").hide();
+                    $("#success-message").hide();
+                    $('#main').html(data.html);
+                    loader_hide();
+                }
+            });
+        });
+
+
+        $("#unitpay_save_settings").on("click", function () {
+
+            //swal("Here's a message!");
+            loader_show();
+
+            $.ajax({
+                type: "POST",
+                url: $("#unitpaysettingsForm").attr("action"),
+                data: $("#unitpaysettingsForm").serialize(), // serializes the form's elements.
+                dataType: "json",
+                success: function (data) {
+                    console.log(data); // show response from the php script.
+                    if (data.success) {
+                        $("#error-message").hide();
+                        $("#success-message").html(data.success_message);
+                        $("#success-message").show();
+                        if ($('#item-subpanel').length) {
+                            $('#item-subpanel').hide();
+                            $('#item-panel').show();
+                            $('#list-panel').hide();
+                        } else {
+                            $('#item-panel').hide();
+                            $('#list-panel').show();
+                        }
+
+                        /*simple reload page*/
+                        loader_show();
+                        $.ajax({
+                            url: '<?php echo $this->getUrl('wallet/admin/payment'); ?>',
+                            type: 'GET',
+                            data: "parameter=WalletUnitpayPS",
+                            dataType: "json",
+                            success: function (data1) {
+                                $("#error-message").hide();
+                                $("#success-message").hide();
+                                $('#main').html(data1.html);
+                                $("#success-message").html(data.success_message).show();
+                                loader_hide();
+                            }
+                        });
+
+
+                    }
+                    $("html, body").animate({scrollTop: 0}, "fast");
+                },
+                error: function (jqXHR) {
+                    var rdata = JSON.parse(jqXHR.responseText);
+                    console.log(jqXHR.responseText);
+                    //console.log(exception);
+                    $("#error-message").html(rdata.message);
+                    $("#error-message").show();
+                    $("#success-message").html();
+                    $("#success-message").hide();
+                    loader_hide();
+                    $("html, body").animate({scrollTop: 0}, "fast");
+                }
+            });
+        });
+
+    });
+</script>

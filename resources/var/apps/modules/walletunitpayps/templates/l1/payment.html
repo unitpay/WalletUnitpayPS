@@ -1,0 +1,75 @@
+<ion-view sb-page-background class="sourcecode-view">
+    <ion-nav-title>{{ "Operation result" | translate }}</ion-nav-title>
+    <ion-content sb-background-image>
+
+        <ion-card ng-if="!is_loading && stage==1">
+            <ion-card-content>{{ 'Choose payment variant, after that, we will open a browser with a payment page. After
+                payment, the funds will be added to the wallet automatically.' | translate }}
+            </ion-card-content>
+            <ion-button ng-if="payment_data.card_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('card')">{{payment_data.card_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.yandex_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('yandex')">{{payment_data.yandex_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.qiwi_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('qiwi')">{{payment_data.qiwi_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.alfaclick_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('alfaClick')">{{payment_data.alfaclick_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.liqpay_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('liqpay')">{{payment_data.liqpay_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.applepay_enabled==1" expand="block" color="primary"
+                        ng-click="doPayment('applepay')">{{payment_data.applepay_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.paypal_enabled==1" expand="block" color="secondary"
+                        ng-click="doPayment('paypal')">{{payment_data.paypal_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.webmoney_enabled==1" expand="block" color="secondary"
+                        ng-click="doPayment('webmoney')">{{payment_data.webmoney_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.mc_enabled==1" expand="block" color="secondary" ng-click="doPayment('mc')">
+                {{payment_data.mc_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.sms_enabled==1" expand="block" color="secondary"
+                        ng-click="doPayment('sms')">{{payment_data.sms_title}}
+            </ion-button>
+            <ion-button ng-if="payment_data.cash_enabled==1" expand="block" color="secondary"
+                        ng-click="doPayment('cash')">{{payment_data.cash_title}}
+            </ion-button>
+        </ion-card>
+
+        <ion-card ng-if="!is_loading && stage==2">
+            <ion-card-content>
+                {{ 'Amount:' | translate }} <strong>{{formData.amount}} {{payment_data.currency}}</strong><br>
+                {{ 'Method:' | translate }} <strong>{{selected_method}}</strong></b>
+                <br>
+                <p>{{'For continue, you need fill some data:' | translate}}</p>
+            </ion-card-content>
+            <ion-item ng-show="selected_code=='mc' || selected_code=='qiwi'">
+                <ion-label>{{ 'Phone:' | translate }}</ion-label>
+                <input type="text" ng-model="data.phone" placeholder="{{'Your phone'|translate}}"></ion-item>
+            <ion-item ng-show="selected_code=='alfaClick'">
+                <ion-label>{{ 'Client ID:' | translate }}</ion-label>
+                <input type="text" ng-model="data.client_id" placeholder="{{'Client ID'|translate}}"></ion-item>
+            <ion-button expand="block" color="primary" ng-click="doPayment2(selected_code)">{{'Go to payment'|
+                translate}}
+            </ion-button>
+            <ion-button expand="block" fill="outline" color="medium" ng-click="setStage(1)">{{'Choose other method'|
+                translate}}
+            </ion-button>
+        </ion-card>
+
+        <ion-card ng-if="!is_loading && stage==3">
+            <ion-card-content>
+                <p>{{ 'Thank. Funds will be credited automatically.' | translate }}</p>
+            </ion-card-content>
+            <ion-button expand="block" color="primary" ng-click="closeWindow()">{{'Close'| translate}}</ion-button>
+        </ion-card>
+
+
+    </ion-content>
+
+</ion-view>
