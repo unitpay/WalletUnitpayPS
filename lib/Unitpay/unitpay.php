@@ -89,12 +89,14 @@ class UnitPay
         '127.0.0.1' // for debug
     ];
     private $secretKey;
+    private $apiUrl;
+    private $formUrl;
     private $params = [];
-    const API_URL = 'https://unitpay.ru/api';
-    const FORM_URL = 'https://unitpay.ru/pay/';
 
-    public function __construct($secretKey = null)
+    public function __construct($domain = null, $secretKey = null)
     {
+        $this->apiUrl = "https://$domain/api";
+        $this->formUrl = "https://$domain/pay/";
         $this->secretKey = $secretKey;
     }
 
@@ -153,7 +155,7 @@ class UnitPay
             $this->params['signature'] = $this->getSignature($vitalParams);
         }
         $this->params['locale'] = $locale;
-        return self::FORM_URL . $publicKey . '?' . http_build_query($this->params);
+        return $this->formUrl . $publicKey . '?' . http_build_query($this->params);
     }
 
     /**
@@ -244,7 +246,7 @@ class UnitPay
         if (empty($params['secretKey'])) {
             throw new InvalidArgumentException('SecretKey is null');
         }
-        $requestUrl = self::API_URL . '?' . http_build_query([
+        $requestUrl = $this->apiUrl . '?' . http_build_query([
                 'method' => $method,
                 'params' => $params,
             ], null, '&', PHP_QUERY_RFC3986);
