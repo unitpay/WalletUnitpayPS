@@ -37,6 +37,10 @@ $schemas['wallet_payment_systems_unitpay'] = [
         'type'    => 'varchar(14)',
         'is_null' => true,
     ],
+    'domain'                            => [
+        'type'    => 'varchar(255)',
+        'is_null' => true,
+    ],
     'public_key'                        => [
         'type'    => 'varchar(150)',
         'is_null' => true,

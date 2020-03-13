@@ -30,6 +30,7 @@ class WalletUnitpayPS_Mobile_UnitpayController extends Application_Controller_Mo
 
 
                     //$data['unitpay'] = $model->getData();
+                    $data['domain'] = $data->getData('domain');
                     $data['public_key'] = $model->getData('public_key');
                     $data['currency'] = $model->getData('currency');
                     $data['locale'] = $model->getData('locale');
@@ -88,6 +89,7 @@ class WalletUnitpayPS_Mobile_UnitpayController extends Application_Controller_Mo
 
                     //$data['unitpay'] = $model->getData();
                     $data['history_id'] = $history->getId();
+                    $data['domain'] = $data->getData('domain');
                     $data['public_key'] = $model->getData('public_key');
                     $data['currency'] = $model->getData('currency');
                     $data['locale'] = $model->getData('locale');
@@ -104,7 +106,7 @@ class WalletUnitpayPS_Mobile_UnitpayController extends Application_Controller_Mo
                     require_once($_SERVER['DOCUMENT_ROOT'] . '/app/local/modules/WalletUnitpayPS/lib/Unitpay/unitpay.php');
 
                     //init payment
-                    $unitPay = new UnitPay($model->getData('secret_key'));
+                    $unitPay = new UnitPay($model->getData('domain'), $model->getData('secret_key'));
                     $response = $unitPay->api('initPayment', [
                         'account'     => $data['history_id'],
                         //'account' => "test",	//test mode
