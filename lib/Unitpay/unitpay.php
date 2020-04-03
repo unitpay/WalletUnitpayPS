@@ -15,10 +15,6 @@
  * @copyright       Copyright (c) 2019 UnitPay
  * @license         http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  *
- * EXTENSION INFORMATION
- *
- * UNITPAY API       https://help.unitpay.ru/
- *
  */
 
 /**
@@ -70,7 +66,7 @@ class CashItem
 /**
  * Payment method UnitPay process
  *
- * @author      UnitPay <support@unitpay.ru>
+ * @author      UnitPay
  */
 class UnitPay
 {
@@ -283,7 +279,6 @@ class UnitPay
         }
         /**
          * IP address check
-         * @link http://help.unitpay.ru/article/67-ip-addresses
          */
         if (!in_array($ip, $this->supportedUnitpayIp)) {
             throw new InvalidArgumentException('IP address Error');
